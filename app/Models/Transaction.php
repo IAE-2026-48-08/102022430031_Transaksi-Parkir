@@ -16,5 +16,6 @@ class Transaction extends Model
         'status',
         'member_id',
         'discount_amount',
+        'receipt_number',
     ];
 }

@@ -7,9 +7,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use OpenApi\Attributes as OA;
+use App\Services\SoapAuditService;
+use App\Services\RabbitMQPublisher;
 
 class TransactionController extends Controller
 {
+    public function __construct(
+        private SoapAuditService  $soapAudit,
+        private RabbitMQPublisher $mqPublisher,
+    ) {}
+
     #[OA\Get(
         path: '/api/v1/transactions',
         summary: 'Admin memantau seluruh transaksi parkir',
@@ -145,7 +152,7 @@ class TransactionController extends Controller
             new OA\Response(response: 401, description: 'Unauthorized'),
         ]
     )]
-    public function update(Request $request, $id)
+   public function update(Request $request, $id)
     {
         $transaction = Transaction::find($id);
 
@@ -172,10 +179,23 @@ class TransactionController extends Controller
             'status'          => $request->status ?? 'completed',
         ]);
 
+        // Hanya jalankan SOAP + RabbitMQ kalau status completed
+        if (($request->status ?? 'completed') === 'completed') {
+
+            // Modul 2: Kirim audit ke SOAP Dosen, simpan ReceiptNumber
+            $receiptNumber = $this->soapAudit->audit($transaction->fresh()->toArray());
+            if ($receiptNumber) {
+                $transaction->update(['receipt_number' => $receiptNumber]);
+            }
+
+            // Modul 3: Publish event ke RabbitMQ Dosen
+            $this->mqPublisher->publishCheckout($transaction->fresh()->toArray());
+        }
+
         return response()->json([
             'status'  => 'success',
             'message' => 'Transaction updated successfully',
-            'data'    => $transaction,
+            'data'    => $transaction->fresh(),
             'meta'    => ['service_name' => 'Transaction-Service', 'api_version' => 'v1'],
         ], 200);
     }
