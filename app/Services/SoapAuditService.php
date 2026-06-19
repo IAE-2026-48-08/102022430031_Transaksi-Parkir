@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\Transaction;
 
 class SoapAuditService
 {
@@ -15,6 +16,8 @@ class SoapAuditService
             Log::error('[SOAP] Gagal mendapatkan token SSO');
             return null;
         }
+
+        $this->mapTokenToLocalRole($token, $transaction['id']);
 
         // Langkah 2: Siapkan data transaksi sebagai JSON
         $logContent = json_encode([
@@ -90,6 +93,30 @@ XML;
         } catch (\Exception $e) {
             Log::error('[SSO] Gagal minta token: ' . $e->getMessage());
             return null;
+        }
+    }
+
+    private function mapTokenToLocalRole(string $token, int $transactionId): void
+    {
+        try {
+            $parts = explode('.', $token);
+            if (count($parts) < 2) {
+                return;
+            }
+
+            $payload = json_decode(base64_decode($parts[1]), true);
+
+            $team = $payload['app']['team'] ?? null;
+            $nim  = $payload['app']['nim'] ?? null;
+
+            Transaction::where('id', $transactionId)->update([
+                'team_id'          => $team,
+                'processed_by_nim' => $nim,
+            ]);
+
+            Log::info("[SSO] Mapped JWT -> team={$team}, nim={$nim} untuk transaction #{$transactionId}");
+        } catch (\Exception $e) {
+            Log::error('[SSO] Gagal mapping token ke role lokal: ' . $e->getMessage());
         }
     }
 }
