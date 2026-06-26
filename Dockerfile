@@ -2,6 +2,9 @@ FROM php:8.3-cli
 
 RUN rm -rf /var/lib/apt/lists/* && \
     apt-get clean && \
+    echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80-retries && \
+    echo 'Acquire::http::Timeout "30";' >> /etc/apt/apt.conf.d/80-retries && \
+    echo 'Acquire::https::Timeout "30";' >> /etc/apt/apt.conf.d/80-retries && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
     --no-install-recommends \
