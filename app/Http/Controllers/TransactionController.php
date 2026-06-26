@@ -53,33 +53,31 @@ class TransactionController extends Controller
         ]
     )]
     public function show($id)
-{
-    if (!is_numeric($id)) {
+    {
+        if (!is_numeric($id)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Transaction not found',
+            ], 404);
+        }
+
+        $transaction = Transaction::find($id);
+
+        if (!$transaction) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Transaction not found',
+            ], 404);
+        }
+
         return response()->json([
-            'status'  => 'error',
-            'message' => 'Transaction not found',
-            'errors'  => null,
-        ], 404);
+            'status'  => 'success',
+            'message' => 'Data retrieved successfully',
+            'data'    => $transaction,
+            'meta'    => ['service_name' => 'Transaction-Service', 'api_version' => 'v1'],
+        ], 200);
     }
 
-    $transaction = Transaction::find($id);
-
-    if (!$transaction) {
-        return response()->json([
-            'status'  => 'error',
-            'message' => 'Transaction not found',
-            'errors'  => null,
-        ], 404);
-    }
-
-    return response()->json([
-        'status'  => 'success',
-        'message' => 'Data retrieved successfully',
-        'data'    => $transaction,
-        'meta'    => ['service_name' => 'Transaction-Service', 'api_version' => 'v1'],
-    ], 200);
-}
-   
 
     #[OA\Post(
         path: '/api/v1/transactions',
@@ -161,7 +159,7 @@ class TransactionController extends Controller
             new OA\Response(response: 401, description: 'Unauthorized'),
         ]
     )]
-   public function update(Request $request, $id)
+    public function update(Request $request, $id)
     {
         $transaction = Transaction::find($id);
 
@@ -169,7 +167,6 @@ class TransactionController extends Controller
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Transaction not found',
-                'errors'  => null,
             ], 404);
         }
 
