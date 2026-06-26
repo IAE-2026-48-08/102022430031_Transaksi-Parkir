@@ -53,24 +53,33 @@ class TransactionController extends Controller
         ]
     )]
     public function show($id)
-    {
-        $transaction = Transaction::find($id);
-
-        if (!$transaction) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Transaction not found',
-                'errors'  => null,
-            ], 404);
-        }
-
+{
+    if (!is_numeric($id)) {
         return response()->json([
-            'status'  => 'success',
-            'message' => 'Data retrieved successfully',
-            'data'    => $transaction,
-            'meta'    => ['service_name' => 'Transaction-Service', 'api_version' => 'v1'],
-        ], 200);
+            'status'  => 'error',
+            'message' => 'Transaction not found',
+            'errors'  => null,
+        ], 404);
     }
+
+    $transaction = Transaction::find($id);
+
+    if (!$transaction) {
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'Transaction not found',
+            'errors'  => null,
+        ], 404);
+    }
+
+    return response()->json([
+        'status'  => 'success',
+        'message' => 'Data retrieved successfully',
+        'data'    => $transaction,
+        'meta'    => ['service_name' => 'Transaction-Service', 'api_version' => 'v1'],
+    ], 200);
+}
+   
 
     #[OA\Post(
         path: '/api/v1/transactions',
