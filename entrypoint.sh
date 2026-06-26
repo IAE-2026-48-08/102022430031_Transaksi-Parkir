@@ -20,6 +20,15 @@ touch database/database.sqlite
 echo ">> migrate database..."
 php artisan migrate --force
 
+echo ">> cek apakah perlu seed data contoh..."
+ROW_COUNT=$(php artisan tinker --execute="echo \DB::table('transactions')->count();" 2>/dev/null | tail -1)
+if [ "$ROW_COUNT" = "0" ]; then
+  echo ">> tabel transactions kosong, jalankan seeder..."
+  php artisan db:seed --force --class=TransactionSeeder
+else
+  echo ">> tabel transactions sudah ada data ($ROW_COUNT baris), skip seeding."
+fi
+
 php artisan config:clear
 php artisan route:clear
 
