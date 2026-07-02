@@ -1,4 +1,6 @@
 # Analisis Tugas 3
+<img width="2895" height="2163" alt="Sequence Diagram1" src="https://github.com/user-attachments/assets/5ca68b82-5ae0-48a8-8efb-2377b2457a40" />
+
 
 ## 1. Transaksi yang Dianggap Penting
 
